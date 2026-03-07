@@ -4,3 +4,4 @@ supabase
 python-jose[cryptography]
 python-dotenv
 pydantic
+httpx>=0.25.0
