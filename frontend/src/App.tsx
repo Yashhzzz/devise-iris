@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider, useAuth } from "@/lib/AuthContext";
+import { AuthProvider } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 import Login from "@/pages/Login";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KpiCards } from "@/components/dashboard/KpiCards";
@@ -61,24 +63,37 @@ function Dashboard() {
   );
 }
 
-function AuthGate() {
-  const { session, loading } = useAuth();
-
-  // Blank screen until supabase.auth.getSession() resolves.
-  // This guarantees zero API calls fire before we know if user is logged in.
-  if (loading) return null;
-
-  return session ? <Dashboard /> : <Login />;
-}
-
 const App = () => {
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    // 1. Check for existing session — nothing renders until this resolves.
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setSessionLoaded(true);
+    });
+
+    // 2. Listen for future auth changes (sign-in, sign-out, token refresh).
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Blank screen until getSession() resolves. Zero API calls fire.
+  if (!sessionLoaded) return null;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <AuthGate />
+          {session ? <Dashboard /> : <Login />}
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
@@ -86,7 +101,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
