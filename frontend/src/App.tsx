@@ -64,34 +64,9 @@ function Dashboard() {
 function AuthGate() {
   const { session, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#F0F2F5",
-        }}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            backgroundColor: "#FF5C1A",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            animation: "pulse 1.5s infinite",
-          }}
-        >
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: 22 }}>D</span>
-        </div>
-      </div>
-    );
-  }
+  // Blank screen until supabase.auth.getSession() resolves.
+  // This guarantees zero API calls fire before we know if user is logged in.
+  if (loading) return null;
 
   return session ? <Dashboard /> : <Login />;
 }
