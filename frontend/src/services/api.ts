@@ -13,16 +13,43 @@ import { supabase } from "@/lib/supabase";
 export const API_BASE = "";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
+  // Try getSession first
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error("Not authenticated");
+
+  console.log("[api] getAuthHeaders session:", session ? "exists" : "null");
+  console.log("[api] token:", session?.access_token ? session.access_token.slice(0, 20) + "…" : "NONE");
+
+  if (session?.access_token) {
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+    };
   }
-  return {
-    Authorization: `Bearer ${session.access_token}`,
-    "Content-Type": "application/json",
-  };
+
+  // Fallback: session might not be hydrated yet — wait for onAuthStateChange
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      sub.unsubscribe();
+      console.error("[api] getAuthHeaders timed out waiting for session");
+      reject(new Error("Not authenticated"));
+    }, 5000);
+
+    const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+      (_event, s) => {
+        if (s?.access_token) {
+          clearTimeout(timeout);
+          sub.unsubscribe();
+          console.log("[api] getAuthHeaders got session from onAuthStateChange");
+          resolve({
+            Authorization: `Bearer ${s.access_token}`,
+            "Content-Type": "application/json",
+          });
+        }
+      }
+    );
+  });
 }
 
 async function apiFetch<T>(
