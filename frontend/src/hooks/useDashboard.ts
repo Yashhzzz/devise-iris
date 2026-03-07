@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import {
   fetchEvents,
   fetchHeartbeats,
@@ -31,14 +32,16 @@ import type { HeartbeatEvent } from "@/data/mockData";
  *   Analytics:    60s
  *   Subscriptions:60s
  *
- * Phase 2 plan: Replace polling for Events and Alerts with Supabase Realtime
- * WebSocket subscriptions.
+ * All hooks are gated by `enabled: !!session` so they never fire
+ * before auth is ready (prevents 401 race → sign-out loop).
  */
 
 export function useEvents(category?: string, riskLevel?: string) {
+  const { session } = useAuth();
   return useQuery<EventsResponse, Error>({
     queryKey: ["events", category, riskLevel],
     queryFn: () => fetchEvents(category, riskLevel),
+    enabled: !!session,
     refetchInterval: 10_000,
     staleTime: 8_000,
     retry: 2,
@@ -46,9 +49,11 @@ export function useEvents(category?: string, riskLevel?: string) {
 }
 
 export function useStats() {
+  const { session } = useAuth();
   return useQuery<StatsResponse, Error>({
     queryKey: ["stats"],
     queryFn: fetchStats,
+    enabled: !!session,
     refetchInterval: 30_000,
     staleTime: 25_000,
     retry: 2,
@@ -56,9 +61,11 @@ export function useStats() {
 }
 
 export function useHeartbeats() {
+  const { session } = useAuth();
   return useQuery<HeartbeatEvent[], Error>({
     queryKey: ["heartbeats"],
     queryFn: fetchHeartbeats,
+    enabled: !!session,
     refetchInterval: 30_000,
     staleTime: 25_000,
     retry: 2,
@@ -66,9 +73,11 @@ export function useHeartbeats() {
 }
 
 export function useAlerts() {
+  const { session } = useAuth();
   return useQuery<AlertItem[], Error>({
     queryKey: ["alerts"],
     queryFn: fetchAlerts,
+    enabled: !!session,
     refetchInterval: 30_000,
     staleTime: 25_000,
     retry: 2,
@@ -76,9 +85,11 @@ export function useAlerts() {
 }
 
 export function useAnalytics() {
+  const { session } = useAuth();
   return useQuery<AnalyticsResponse, Error>({
     queryKey: ["analytics"],
     queryFn: fetchAnalytics,
+    enabled: !!session,
     refetchInterval: 60_000,
     staleTime: 55_000,
     retry: 2,
@@ -86,9 +97,11 @@ export function useAnalytics() {
 }
 
 export function useSubscriptions() {
+  const { session } = useAuth();
   return useQuery<SubscriptionItem[], Error>({
     queryKey: ["subscriptions"],
     queryFn: fetchSubscriptions,
+    enabled: !!session,
     refetchInterval: 60_000,
     staleTime: 55_000,
     retry: 2,
@@ -96,9 +109,11 @@ export function useSubscriptions() {
 }
 
 export function useSpendOverview() {
+  const { session } = useAuth();
   return useQuery<SpendOverview, Error>({
     queryKey: ["spend-overview"],
     queryFn: fetchSpendOverview,
+    enabled: !!session,
     refetchInterval: 60_000,
     staleTime: 55_000,
     retry: 2,
@@ -106,9 +121,11 @@ export function useSpendOverview() {
 }
 
 export function useTeam() {
+  const { session } = useAuth();
   return useQuery<TeamResponse, Error>({
     queryKey: ["team"],
     queryFn: fetchTeam,
+    enabled: !!session,
     refetchInterval: 60_000,
     staleTime: 55_000,
     retry: 2,
@@ -116,18 +133,22 @@ export function useTeam() {
 }
 
 export function useSettings() {
+  const { session } = useAuth();
   return useQuery<OrgSettings, Error>({
     queryKey: ["settings"],
     queryFn: fetchSettings,
+    enabled: !!session,
     staleTime: 60_000,
     retry: 2,
   });
 }
 
 export function useMe() {
+  const { session } = useAuth();
   return useQuery<UserProfile, Error>({
     queryKey: ["me"],
     queryFn: fetchMe,
+    enabled: !!session,
     staleTime: 300_000,
     retry: 2,
   });

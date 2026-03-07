@@ -40,10 +40,10 @@ async function apiFetch<T>(
     headers: { ...headers, ...(init?.headers || {}) },
   });
   if (res.status === 401) {
-    // Session expired — sign out and redirect
-    await supabase.auth.signOut();
-    window.location.reload();
-    throw new Error("Session expired");
+    // Don't sign out automatically — the session may still be valid
+    // (race condition on first load, cold-start delay, etc.).
+    // React Query's retry will handle transient 401s.
+    throw new Error("Unauthorized");
   }
   if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
   return res.json() as Promise<T>;
