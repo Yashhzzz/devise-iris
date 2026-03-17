@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { X, Bell, Shield, Mail, Key, Layout, Check, AlertTriangle } from "lucide-react";
+import { X, Bell, Shield, Mail, Key, Layout, Check, AlertTriangle, User } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useMe } from "@/hooks/useDashboard";
 import { updateMe } from "@/services/api";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { toast } from "sonner";
 
 interface AccountSettingsPanelProps {
@@ -19,6 +19,7 @@ export function AccountSettingsPanel({ isOpen, onClose }: AccountSettingsPanelPr
   const [isSaving, setIsSaving] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
+  const [fullName, setFullName] = useState("");
   const [notificationPrefs, setNotificationPrefs] = useState({
     high_risk_alerts: true,
     daily_summary: false,
@@ -26,8 +27,11 @@ export function AccountSettingsPanel({ isOpen, onClose }: AccountSettingsPanelPr
   });
 
   useEffect(() => {
-    if (profile?.notification_prefs) {
-      setNotificationPrefs(profile.notification_prefs);
+    if (profile) {
+      setFullName(profile.full_name || "");
+      if (profile.notification_prefs) {
+        setNotificationPrefs(profile.notification_prefs);
+      }
     }
   }, [profile]);
 
@@ -54,7 +58,14 @@ export function AccountSettingsPanel({ isOpen, onClose }: AccountSettingsPanelPr
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
+      if (fullName && fullName !== profile?.full_name) {
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { displayName: fullName });
+        }
+      }
+      
       await updateMe({
+        full_name: fullName,
         notification_prefs: notificationPrefs
       });
       await refetch();
@@ -98,7 +109,7 @@ export function AccountSettingsPanel({ isOpen, onClose }: AccountSettingsPanelPr
       <div 
         className="fixed top-0 bottom-0 right-0 z-50 bg-white flex flex-col transition-transform duration-200"
         style={{ 
-          width: 480, 
+          width: 400, 
           boxShadow: "-12px 0 48px rgba(0,0,0,0.12)",
           transform: isClosing ? "translateX(100%)" : "translateX(0)" 
         }}
@@ -123,20 +134,33 @@ export function AccountSettingsPanel({ isOpen, onClose }: AccountSettingsPanelPr
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
           
-          {/* Email Section */}
+          {/* Profile Section */}
           <section className="flex flex-col gap-4">
             <h3 className="text-[11px] uppercase tracking-wider text-[#94A3B8] font-bold flex items-center gap-2">
-              <Mail size={14} />
-              Email Configuration
+              <User size={14} className="text-[#FF5C1A]" />
+              Profile Configuration
             </h3>
-            <div className="p-4 rounded-xl border border-[#F0F2F5] bg-[#F8FAFC]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-[#1A1A2E]">{user?.email}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-600 font-bold uppercase tracking-tight">Verified</span>
+            
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#64748B]">Display Name</label>
+                <input 
+                  type="text" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-3 py-2 border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:border-[#FF5C1A]"
+                />
               </div>
-              <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Email change is restricted for security. Please contact <a href="mailto:support@devise.ai" className="text-[#FF5C1A] hover:underline">support@devise.ai</a> to update your login email.
-              </p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-medium text-[#64748B]">Email Address</label>
+                <div className="p-3 bg-[#F8FAFC] border border-[#F0F2F5] rounded-lg flex items-center justify-between">
+                  <span className="text-sm text-[#64748B]">{user?.email}</span>
+                  <span className="text-[10px] text-[#94A3B8]">Read Only</span>
+                </div>
+                <p className="text-[11px] text-[#94A3B8]">Contact admin to change your registered email.</p>
+              </div>
             </div>
           </section>
 

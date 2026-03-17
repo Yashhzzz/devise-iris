@@ -90,7 +90,7 @@ export function MyProfilePanel({ isOpen, onClose }: MyProfilePanelProps) {
       <div 
         className="fixed top-0 bottom-0 right-0 z-50 bg-white flex flex-col transition-transform duration-200"
         style={{ 
-          width: 480, 
+          width: 400, 
           boxShadow: "-12px 0 48px rgba(0,0,0,0.12)",
           transform: isClosing ? "translateX(100%)" : "translateX(0)" 
         }}
@@ -196,7 +196,7 @@ export function MyProfilePanel({ isOpen, onClose }: MyProfilePanelProps) {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] uppercase tracking-wider text-[#94A3B8] font-bold">Joined</span>
+                  <span className="text-[11px] uppercase tracking-wider text-[#94A3B8] font-bold">Member since</span>
                   <div className="flex items-center gap-1.5 text-sm font-medium text-[#1A1A2E]">
                     <Calendar size={14} className="text-[#94A3B8]" />
                     {formatDate(profile?.created_at)}
@@ -214,7 +214,6 @@ export function MyProfilePanel({ isOpen, onClose }: MyProfilePanelProps) {
               <div className="mt-2 pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Database size={16} className="text-[#94A3B8]" />
-                  <span className="text-xs text-[#64748B]">Total Detections</span>
                 </div>
                 <span className="text-sm font-bold text-[#1A1A2E]">
                   {detectionCount ?? "..."}
